@@ -162,8 +162,8 @@
       <div>Média de reação: <span id="average"></span> segundos</div>
       <div>Acertos - erros: <span id="score"></span></div>
     </div>
-    <textarea class="emscripten" id="output" rows="8"></textarea>
-    <hr />
+    <!-- <textarea class="emscripten" id="output" rows="8"></textarea> -->
+    <!-- <hr /> -->
     <script type="text/javascript">
       var statusElement = document.getElementById("status");
       var progressElement = document.getElementById("progress");
@@ -183,7 +183,7 @@
             //text = text.replace(/</g, "&lt;");
             //text = text.replace(/>/g, "&gt;");
             //text = text.replace('\n', '<br>', 'g');
-            console.log(text);
+
             if (element) {
               element.value += text + "\n";
               element.scrollTop = element.scrollHeight; // focus on bottom
@@ -261,6 +261,8 @@
           null // arguments
         );
       });
+
+      document.getElementById();
     </script>
     {{{ SCRIPT }}}
   </body>

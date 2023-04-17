@@ -153,7 +153,6 @@
     <div class="emscripten">
       <hr />
       <div>
-        <button id="mybutton">TEST BUTTON</button>
         <button id="resetButton">RESET</button>
       </div>
     </div>
@@ -163,8 +162,8 @@
       <div>Média de reação: <span id="average"></span> segundos</div>
       <div>Acertos - erros: <span id="score"></span></div>
     </div>
-    <textarea class="emscripten" id="output" rows="8"></textarea>
-    <hr />
+    <!-- <textarea class="emscripten" id="output" rows="8"></textarea> -->
+    <!-- <hr /> -->
     <script type="text/javascript">
       var statusElement = document.getElementById("status");
       var progressElement = document.getElementById("progress");
@@ -184,7 +183,7 @@
             //text = text.replace(/</g, "&lt;");
             //text = text.replace(/>/g, "&gt;");
             //text = text.replace('\n', '<br>', 'g');
-            console.log(text);
+
             if (element) {
               element.value += text + "\n";
               element.scrollTop = element.scrollHeight; // focus on bottom
@@ -254,17 +253,7 @@
         };
       };
 
-      document.getElementById("mybutton").addEventListener("click", () => {
-        // alert("check console");
-        const result = Module.ccall(
-          "showResults", // name of C function
-          null, // return type
-          null, // argument types
-          null // arguments
-        );
-      });
       document.getElementById("resetButton").addEventListener("click", () => {
-        // alert("check console");
         const result = Module.ccall(
           "reset", // name of C function
           null, // return type
@@ -272,8 +261,10 @@
           null // arguments
         );
       });
+
+      document.getElementById();
     </script>
-    <script async type="text/javascript" src="test.js"></script>
+    <script async type="text/javascript" src="index.js"></script>
   </body>
 </html>
 

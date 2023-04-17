@@ -91,26 +91,51 @@ void markStartTime()
   startTime = SDL_GetTicks();
 }
 
+float idlePunishment = 3000;
+int idleMisses = 0;
+int maxIdleMisses = 3;
+
+/**
+ * @brief Reset the state variables (running, hits, miss, idleMisses)
+ *
+ */
 void resetSate()
 {
   running = false;
   hits = miss = 0;
+  idleMisses = 0;
 }
 
+/**
+ * @brief Calculate the average reaction time of matches, update the DOM and reset the state
+ *
+ */
 void finish()
 {
-  std::string a = "document.getElementById('average').textContent = ";
-  // make the average value of results
-  uint32_t sum = 0;
-  for (int i = 0; i < maxMatches; i++)
+  // only calculate the average of hits
+  int validMatches = hits;
+
+  // add idle punishment to the results
+  for (int i = 0; i < idleMisses; i++)
   {
+    int j = i % validMatches;
+    results[j] += idlePunishment;
+  }
+
+  // take the average value of results
+  uint32_t sum = 0;
+  for (int i = 0; i < validMatches; i++)
+  {
+    std::cout << results[i] << std::endl;
     sum += results[i];
   }
-  float average = sum / maxMatches;
+  float average = sum / validMatches;
 
+  // JavaScript code to update the DOM
   char averageScript[100];
   sprintf(averageScript, "document.getElementById('average').textContent = '%2f'", average / 1000);
 
+  // JavaScript code to update the DOM
   char scoreScript[100];
   sprintf(scoreScript, "document.getElementById('score').textContent = '%d'", hits - miss);
 
@@ -123,6 +148,13 @@ void finish()
   redraw();
 }
 
+uint32_t ticksForNextKeyDown = 0;
+
+/**
+ * @brief
+ *
+ * @param timeStamp
+ */
 void match(uint32_t timeStamp)
 {
   uint32_t endTime = timeStamp;
@@ -140,6 +172,26 @@ void match(uint32_t timeStamp)
   redraw();
 }
 
+/**
+ * @brief Register an idle miss and check if the maximum number of idle misses has been reached
+ *
+ * @param ticksNow {uint32_t}
+ */
+void computeIdle(uint32_t ticksNow)
+{
+  if (idleMisses == maxIdleMisses)
+  {
+    finish();
+    return;
+  }
+  miss++;
+  idleMisses++;
+  randomizeCircle();
+  ticksForNextKeyDown = ticksNow + 3000;
+  markStartTime();
+  redraw();
+}
+
 void start()
 {
   running = true;
@@ -150,6 +202,12 @@ void start()
   redraw();
 }
 
+/**
+ * @brief Checks if the keydown event is the expected color
+ *
+ * @param e
+ * @param expectedColor
+ */
 void checkEvent(SDL_Event e, int expectedColor)
 {
   uint32_t timeStamp = e.key.timestamp;
@@ -186,8 +244,10 @@ void checkEvent(SDL_Event e, int expectedColor)
   }
 }
 
-uint32_t ticksForNextKeyDown = 0;
-
+/**
+ * @brief Handle the events, handling keydown events and idle events
+ *
+ */
 bool handle_events()
 {
   SDL_Event event;
@@ -206,6 +266,15 @@ bool handle_events()
     {
       uint32_t ticksNow = SDL_GetTicks();
       checkEvent(event, expectedColor);
+      ticksForNextKeyDown = ticksNow + 3000;
+    }
+  }
+  else
+  {
+    uint32_t ticksNow = SDL_GetTicks();
+    if (running && ticksNow > ticksForNextKeyDown)
+    {
+      computeIdle(ticksNow);
     }
   }
   return true;
@@ -226,8 +295,10 @@ void run_main_loop()
 int main()
 {
   SDL_Init(SDL_INIT_VIDEO);
+  srand(time(NULL));
 
   backgroundColorG = 0x80;
+  backgroundColorR = backgroundColorB = 0x00;
   circleR = circleB = 0x00;
   circleG = 0x80;
 
@@ -248,30 +319,11 @@ int main()
 #define EXTERN
 #endif
 
-EXTERN EMSCRIPTEN_KEEPALIVE void myFunction(int argc, char **argv)
-{
-  // printf("MyFunction Called\n");
-  // match();
-  // randomizeCircle();
-  redraw();
-}
-
-EXTERN EMSCRIPTEN_KEEPALIVE void showResults(int argc, char **argv)
-{
-  printf("showResults called\n");
-  printf("Hits: %d\n", hits);
-  printf("Miss: %d\n", miss);
-  for (int i = 0; i < maxMatches; i++)
-  {
-    printf("Result %d: %f\n", i, results[i]);
-  }
-}
-
 EXTERN EMSCRIPTEN_KEEPALIVE void reset(int argc, char **argv)
 {
-  printf("reset called\n");
   resetSate();
   backgroundColorG = 0x80;
+  backgroundColorR = backgroundColorB = 0x00;
   circleR = circleB = 0x00;
   circleG = 0x80;
   redraw();

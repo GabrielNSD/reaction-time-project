@@ -115,7 +115,7 @@ void finish()
   // only calculate the average of hits
   int validMatches = hits;
   // add idle punishment to the results
-  if (validMatches)
+  if (validMatches && idleMisses > 0)
     for (int i = 0; i < idleMisses; i++)
     {
       int j = i % validMatches;
@@ -128,7 +128,7 @@ void finish()
   {
     sum += results[i];
   }
-  float average = sum / (validMatches || 1);
+  float average = sum / (validMatches != 0 ? validMatches : 1);
 
   // JavaScript code to update the DOM
   char averageScript[100];

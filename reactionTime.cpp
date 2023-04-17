@@ -94,6 +94,7 @@ void markStartTime()
 float idlePunishment = 3000;
 int idleMisses = 0;
 int maxIdleMisses = 3;
+int sequentialIdleMisses = 0;
 
 /**
  * @brief Reset the state variables (running, hits, miss, idleMisses)
@@ -102,8 +103,7 @@ int maxIdleMisses = 3;
 void resetSate()
 {
   running = false;
-  hits = miss = 0;
-  idleMisses = 0;
+  hits = miss = idleMisses = sequentialIdleMisses = 0;
 }
 
 /**
@@ -114,22 +114,21 @@ void finish()
 {
   // only calculate the average of hits
   int validMatches = hits;
-
   // add idle punishment to the results
-  for (int i = 0; i < idleMisses; i++)
-  {
-    int j = i % validMatches;
-    results[j] += idlePunishment;
-  }
+  if (validMatches)
+    for (int i = 0; i < idleMisses; i++)
+    {
+      int j = i % validMatches;
+      results[j] += idlePunishment;
+    }
 
   // take the average value of results
   uint32_t sum = 0;
   for (int i = 0; i < validMatches; i++)
   {
-    std::cout << results[i] << std::endl;
     sum += results[i];
   }
-  float average = sum / validMatches;
+  float average = sum / (validMatches || 1);
 
   // JavaScript code to update the DOM
   char averageScript[100];
@@ -161,6 +160,7 @@ void match(uint32_t timeStamp)
   randomizeCircle();
   results[hits] = endTime - startTime;
   hits++;
+  sequentialIdleMisses = 0;
   if (hits == maxMatches)
   {
     finish();
@@ -179,13 +179,14 @@ void match(uint32_t timeStamp)
  */
 void computeIdle(uint32_t ticksNow)
 {
-  if (idleMisses == maxIdleMisses)
+  if (sequentialIdleMisses == maxIdleMisses)
   {
     finish();
     return;
   }
   miss++;
   idleMisses++;
+  sequentialIdleMisses++;
   randomizeCircle();
   ticksForNextKeyDown = ticksNow + 3000;
   markStartTime();
@@ -197,6 +198,7 @@ void start()
   running = true;
   hits = miss = 0;
   backgroundColorR = backgroundColorG = backgroundColorB = 0x00;
+  ticksForNextKeyDown = SDL_GetTicks() + 3000;
   markStartTime();
   randomizeCircle();
   redraw();
@@ -271,10 +273,13 @@ bool handle_events()
   }
   else
   {
-    uint32_t ticksNow = SDL_GetTicks();
-    if (running && ticksNow > ticksForNextKeyDown)
+    if (running)
     {
-      computeIdle(ticksNow);
+      uint32_t ticksNow = SDL_GetTicks();
+      if (ticksNow > ticksForNextKeyDown)
+      {
+        computeIdle(ticksNow);
+      }
     }
   }
   return true;

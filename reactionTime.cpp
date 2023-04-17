@@ -326,5 +326,14 @@ EXTERN EMSCRIPTEN_KEEPALIVE void reset(int argc, char **argv)
   backgroundColorR = backgroundColorB = 0x00;
   circleR = circleB = 0x00;
   circleG = 0x80;
+
+  // JavaScript code to update the DOM
+  char *averageScript = "document.getElementById('average').textContent = ''";
+
+  // JavaScript code to update the DOM
+  char *scoreScript = "document.getElementById('score').textContent = ''";
+
+  emscripten_run_script(averageScript);
+  emscripten_run_script(scoreScript);
   redraw();
 }
